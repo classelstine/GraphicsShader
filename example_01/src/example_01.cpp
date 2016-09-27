@@ -8,12 +8,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include "example_01.h"
 
-#ifdef _WIN32
-static DWORD lastTime;
-#else
-static struct timeval lastTime;
-#endif
+
 
 #define PI 3.14159265 // Should be used from mathlib
 
@@ -23,15 +20,14 @@ using namespace std;
 // Global Variables
 //****************************************************
 GLfloat translation[3] = {0.0f, 0.0f, 0.0f};
-bool auto_strech = false;
+int auto_strech = false;
 int Width_global = 400;
 int Height_global = 400;
 
-inline float sqr(float x) { return x*x; }
 
 //******
 //HARD CODED INPUTS -- PLEASE CHANGE
-//*****
+//***
 float KA = 0.5;
 float KD = 0.5;
 float KS = 0.5;
@@ -46,84 +42,24 @@ void initializeRendering()
     glfwInit();
 }
   
-class Color {
-    public:
-        float red, green, blue;
-        Color (float, float, float);
-        Color(); 
-        void set_color (float, float, float);
-        void scale_color(float c);
-        void add_color(Color c1);
-        };
-
-Color::Color() {} 
-
-Color::Color (float r, float g, float b) {
-    red = r;
-    green = g;
-    blue = b;
-}
-
-class Light { 
-  Color color;
-  float x, y, z; 
-  bool direct;
-  bool is_direct(void);
-  };
-
-bool Light::is_direct(void) { 
-  return direct;
-} 
-
-vector<Light> total_lights;
-
-void phong(float, float, float, Color *); 
-
-void Color::set_color(float r, float g, float b) {
-    red = r;
-    green = g;
-    blue = b;
-}
-
 // must make sure this stays in the bounds of color
-void scale_color(float c, Color c1, Color *c2) {
-    c2->red = c * c1.red;
-    c2->green = c * c1.green;
-    c2->blue = c * c1.blue;
+
+//****************************************************
+// A routine to set a pixel by drawing a GL point.  This is not a
+// general purpose routine as it assumes a lot of stuff specific to
+// this example.
+//****************************************************
+void setPixel(float x, float y, GLfloat r, GLfloat g, GLfloat b) {
+    glColor3f(r, g, b);
+    glVertex2f(x+0.5, y+0.5);  // The 0.5 is to target pixel centers
+    // Note: Need to check for gap bug on inst machines.
 }
 
-// must make sure this stays in the bounds of color
-void Color::add_color(Color c1) {
-    red = c1.red + red;
-    green  = c1.green + green;
-    blue = c1.blue + blue;
-}
-
-
-class Vector {
-    public:
-        float x, y, z;
-        Vector(float, float, float);
-        void normalize(void);
-        Vector();
-};
-//*****************
-//Vector Class and relevant functions
-//****************
-
-Vector::Vector() {} 
-
-Vector::Vector (float x, float y, float z) {
-    x = x;
-    y = y;
-    z = z;
-}
-
-void Vector::normalize (void) { 
-    float length = sqrt(sqr(x) + sqr(y) + sqr(z));
-    x = x/length;
-    y = y/length;
-    z = z/length; 
+//Note: p1 is the head and p2 is the tail of the vector 
+void points_to_vector(Point p1, Point p2, Vector *v) { 
+  v->x = p1.x - p2.x; 
+  v->y = p1.y - p2.y;
+  v->z = p1.z - p2.z;
 } 
 
 void scale_vector(float c, Vector v, Vector *n) {
@@ -142,17 +78,11 @@ void add_vector(Vector v1, Vector v2, Vector *v) {
     v->z = v1.z + v2.z;
 }
 
-
-
-//****************************************************
-// A routine to set a pixel by drawing a GL point.  This is not a
-// general purpose routine as it assumes a lot of stuff specific to
-// this example.
-//****************************************************
-void setPixel(float x, float y, GLfloat r, GLfloat g, GLfloat b) {
-    glColor3f(r, g, b);
-    glVertex2f(x+0.5, y+0.5);  // The 0.5 is to target pixel centers
-    // Note: Need to check for gap bug on inst machines.
+// must make sure this stays in the bounds of color
+void scale_color(float c, Color c1, Color *c2) {
+    c2->red = c * c1.red;
+    c2->green = c * c1.green;
+    c2->blue = c * c1.blue;
 }
 
 //****************************************************
@@ -251,6 +181,7 @@ void drawCircle(float centerX, float centerY, float radius) {
 void phong(float px, float py, float pz, Color *pixel_color) {
     Color tmp_pixel_color = Color();
     Vector view = Vector(0,0,1);
+    Point cur_point = Point(px, py, pz);
     Vector normal = Vector(px, py, pz);
     normal.normalize();
     Color ambient = Color(0.0, 0.0, 0.0);
@@ -261,26 +192,27 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       Vector light_vec = Vector();
       Color light_col = cur_light.color;
       if(cur_light.is_direct()) {
-        light_vec = cur_light.vec;
+        light_vec = Vector(cur_light.x, cur_light.y, cur_light.z);
       } else {
-        points_to_vector(cur_light.x, cur_light.y, cur_light.z, px, py, pz, &light_vec);
+        Point cur_light_pt = Point(cur_light.x, cur_light.y, cur_light.z);
+        points_to_vector(cur_light_pt, cur_point, &light_vec);
       }
 
-      Vector reflectance = Vector();
-      refelctance(light_vec, normal, &reflectance); 
+      Vector reflect = Vector();
+      reflectance(light_vec, normal, &reflect); 
       Color new_ambient = Color();
       scale_color(KA, light_col, &new_ambient);
       ambient.add_color(new_ambient);
 
-      new_diffuse = Color();
+      Color new_diffuse = Color();
       float l_n = dot(light_vec, normal);
-      float positive_dot = max(l_n, 0);
-      scale_color(positive_dot * KD, &new_diffuse); 
+      float positive_dot = max(l_n,(float)  0.0);
+      scale_color(positive_dot * KD, light_col, &new_diffuse); 
       diffuse.add_color(new_diffuse);
 
       Color new_specular = Color();
-      float tmp = math.pow(max(dot(reflectance, view), 0), SPU) * KS;
-      scale_vector(tmp, light_col, &new_specular);
+      float tmp = pow(max(dot(reflect, view),(float)  0), SPU) * KS;
+      scale_color(tmp, light_col, &new_specular);
       specular.add_color(new_specular);
     }
   tmp_pixel_color.add_color(ambient); 
@@ -298,7 +230,7 @@ void reflectance(Vector light_source, Vector normal, Vector *reflectance) {
     Vector scaled_norm = Vector();
     scale_vector(tmp, light_source, &scaled_norm); 
     Vector result_vector = Vector(); 
-    Vector::add_vector(negative_norm, scaled_norm, &result_vector); 
+    add_vector(negative_norm, scaled_norm, &result_vector); 
 } 
 
 
