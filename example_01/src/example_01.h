@@ -65,8 +65,6 @@ Light::Light(bool is_dir, float r, float g, float b, float lx, float ly, float l
   z = lz;
 }
 
-vector<Light> total_lights;
-
 void phong(float, float, float, Color *); 
 
 void Color::set_color(float r, float g, float b) {

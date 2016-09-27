@@ -33,6 +33,10 @@ float KD = 0.5;
 float KS = 0.5;
 float SPU = 0.5;
 float SPV = 0.5;
+bool is_isotropic = true;
+
+Light light1 = Light(false, 0.5, 0.5, 0.5, 10, 10, 10);
+vector<Light> total_lights = {light1};
 
 //****************************************************
 // Simple init function
