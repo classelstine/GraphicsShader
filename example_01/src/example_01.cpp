@@ -45,38 +45,58 @@ void initializeRendering()
 {
     glfwInit();
 }
-
-class color {
+  
+class Color {
     public:
         float red, green, blue;
-        color (float, float, float);
+        Color (float, float, float);
+        Color(); 
         void set_color (float, float, float);
+        void scale_color(float c);
+        void add_color(Color c1);
         };
 
-color::color (float r, float g, float b) {
+Color::Color() {} 
+
+Color::Color (float r, float g, float b) {
     red = r;
     green = g;
     blue = b;
 }
 
-void color::set_color(float r, float g, float b) {
+class Light { 
+  Color color;
+  float x, y, z; 
+  bool direct;
+  bool is_direct(void);
+  };
+
+bool Light::is_direct(void) { 
+  return direct;
+} 
+
+vector<Light> total_lights;
+
+void phong(float, float, float, Color *); 
+
+void Color::set_color(float r, float g, float b) {
     red = r;
     green = g;
     blue = b;
 }
 
 // must make sure this stays in the bounds of color
-color scale_color(float c, color col) {
-    return color(c*col.red, c*col.green, c*col.blue);
+void scale_color(float c, Color c1, Color *c2) {
+    c2->red = c * c1.red;
+    c2->green = c * c1.green;
+    c2->blue = c * c1.blue;
 }
 
 // must make sure this stays in the bounds of color
-color add_color(color c1, color c2) {
-    float new_r = c1.red + c2.red;
-    float new_g = c1.green + c2.green;
-    float new_b = c1.blue + c2.blue;
-    color new_color(new_r, new_g, new_b);
-    return new_color;
+void Color::add_color(Color c1) {
+    red = c1.red + red;
+    green  = c1.green + green;
+    blue = c1.blue + blue;
 }
 
 
@@ -84,10 +104,14 @@ class Vector {
     public:
         float x, y, z;
         Vector(float, float, float);
+        void normalize(void);
+        Vector();
 };
 //*****************
 //Vector Class and relevant functions
 //****************
+
+Vector::Vector() {} 
 
 Vector::Vector (float x, float y, float z) {
     x = x;
@@ -95,38 +119,30 @@ Vector::Vector (float x, float y, float z) {
     z = z;
 }
 
-Vector scale_vector(float c, Vector vec) {
-    float x = c * vec.x;
-    float y = c * vec.y;
-    float z = c * vec.z;
-    return Vector(x, y, z);
+void Vector::normalize (void) { 
+    float length = sqrt(sqr(x) + sqr(y) + sqr(z));
+    x = x/length;
+    y = y/length;
+    z = z/length; 
+} 
+
+void scale_vector(float c, Vector v, Vector *n) {
+    n->x = c * v.x;
+    n->y = c * v.y;
+    n->z = c * v.z;
 }
 
 float dot(Vector v1, Vector v2) {
    return (v1.x * v2.x) + (v1.y * v1.y) + (v1.z * v1.z);
 }
 
-Vector add_vector(Vector v1, Vector v2) {
-    float x = v1.x + v2.x;
-    float y = v1.y + v2.y;
-    float z = v1.z + v2.z;
-    return Vector(x, y, z);
+void add_vector(Vector v1, Vector v2, Vector *v) {
+    v->x = v1.x + v2.x;
+    v->y = v1.y + v2.y;
+    v->z = v1.z + v2.z;
 }
 
-Vector normalized(Vector vec) {
-    float length = sqrt(sqr(vec.x) + sqr(vec.y) + sqr(vec.z));
-    float x = vec.x / length;
-    float y = vec.y / length;
-    float z = vec.z / length;
-    return Vector(x, y, z);
-}
 
-Vector points_to_vec(float x1, float y1, float z1, float x2, float y2, float y3) {
-    float x = x2 - x1;
-    float y = y2 - y1;
-    float z = z2 - z1;
-    return Vector(x, y, z);
-}
 
 //****************************************************
 // A routine to set a pixel by drawing a GL point.  This is not a
@@ -197,6 +213,8 @@ void drawCircle(float centerX, float centerY, float radius) {
 
                 // This is the front-facing Z coordinate
                 float z = sqrt(radius*radius-dist*dist);
+                Color pixel_color = Color();
+                phong(x, y, z, &pixel_color);
 
                 // given x, y, z, and light_x, light_y, and light z:
                 // find abient, diffuse, and specular parts
@@ -205,9 +223,9 @@ void drawCircle(float centerX, float centerY, float radius) {
                 // solve for each part of phong
                 // total phong
                 
-                setPixel(i, j, 1.0, 0.0, 0.0);
+                setPixel(i, j, pixel_color.red, pixel_color.green, pixel_color.blue);
 
-                // This is amusing, but it assumes negative color values are treated reasonably.
+                // This is amusing, but it assumes negative Color values are treated reasonably.
                 // setPixel(i,j, x/radius, y/radius, z/radius );
                 
                 // Just for fun, an example of making the boundary pixels yellow.
@@ -221,12 +239,6 @@ void drawCircle(float centerX, float centerY, float radius) {
     glEnd();
 }
 
-Vector find_reflectance(Vector light_vec, Vector norm) {
-    Vector left = scale_vector(-1, light_vec);
-    float l_dot_n = dot(light_vec, norm);
-    Vector right = scale_vector((2 * l_dot_n), norm);
-    return add_vector(left, right);
-}
 
 //*****
 //PHONG SHADING APPLIED
@@ -236,21 +248,58 @@ Vector find_reflectance(Vector light_vec, Vector norm) {
 // light_cols : list of light colors 
 // view : view vector
 //*****
-color phong(float px, float py, float pz, Vector norm, list<Vector> light_vecs, list<color> light_cols, Vector view) {
-    color final_color = color();
-    color identity = color(1.0, 1.0, 1.0);
-    color ambient = scale_color(KA, identity);
-    color diffuse = color(0.0, 0.0, 0.0);
-    color specular = color(0.0, 0.0, 0.0);
-    for(int i = 0; i < size(light_vecs); i++){
-        float max_val = max(0, dot(light_vecs[i], n));
-        color new_diff = scale_color( (KD * max_val), identity); 
-        diffuse = add_color(new_diff, diffuse);
-        // find r value for this
-        // find specularity added by this light
+void phong(float px, float py, float pz, Color *pixel_color) {
+    Color tmp_pixel_color = Color();
+    Vector view = Vector(0,0,1);
+    Vector normal = Vector(px, py, pz);
+    normal.normalize();
+    Color ambient = Color(0.0, 0.0, 0.0);
+    Color diffuse = Color(0.0, 0.0, 0.0);
+    Color specular = Color(0.0, 0.0, 0.0);
+    for(int d =0; d < total_lights.size(); d++) {
+      Light cur_light = total_lights[d];
+      Vector light_vec = Vector();
+      Color light_col = cur_light.color;
+      if(cur_light.is_direct()) {
+        light_vec = cur_light.vec;
+      } else {
+        points_to_vector(cur_light.x, cur_light.y, cur_light.z, px, py, pz, &light_vec);
+      }
+
+      Vector reflectance = Vector();
+      refelctance(light_vec, normal, &reflectance); 
+      Color new_ambient = Color();
+      scale_color(KA, light_col, &new_ambient);
+      ambient.add_color(new_ambient);
+
+      new_diffuse = Color();
+      float l_n = dot(light_vec, normal);
+      float positive_dot = max(l_n, 0);
+      scale_color(positive_dot * KD, &new_diffuse); 
+      diffuse.add_color(new_diffuse);
+
+      Color new_specular = Color();
+      float tmp = math.pow(max(dot(reflectance, view), 0), SPU) * KS;
+      scale_vector(tmp, light_col, &new_specular);
+      specular.add_color(new_specular);
     }
-    return add_color(ambient, add_color(diffuse, specular));
+  tmp_pixel_color.add_color(ambient); 
+  tmp_pixel_color.add_color(diffuse); 
+  tmp_pixel_color.add_color(specular); 
+  pixel_color->red = tmp_pixel_color.red;
+  pixel_color->green = tmp_pixel_color.green;
+  pixel_color->blue = tmp_pixel_color.blue;
 }
+
+void reflectance(Vector light_source, Vector normal, Vector *reflectance) { 
+    Vector negative_norm = Vector();
+    scale_vector(-1, light_source, &negative_norm); 
+    float tmp = 2.0*dot(light_source, normal); 
+    Vector scaled_norm = Vector();
+    scale_vector(tmp, light_source, &scaled_norm); 
+    Vector result_vector = Vector(); 
+    Vector::add_vector(negative_norm, scaled_norm, &result_vector); 
+} 
 
 
 //****************************************************
@@ -260,7 +309,7 @@ void display( GLFWwindow* window )
 {
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f ); //clear background screen to black
     
-    glClear(GL_COLOR_BUFFER_BIT);                // clear the color buffer (sets everything to black)
+    glClear(GL_COLOR_BUFFER_BIT);                // clear the Color buffer (sets everything to black)
     
     glMatrixMode(GL_MODELVIEW);                  // indicate we are specifying camera transformations
     glLoadIdentity();                            // make sure transformation is "zero'd"
