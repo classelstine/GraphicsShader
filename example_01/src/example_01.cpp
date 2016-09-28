@@ -10,11 +10,13 @@
 #include <math.h>
 #include "example_01.h"
 
+#include <boost/program_options.hpp>
 
 
 #define PI 3.14159265 // Should be used from mathlib
 
 using namespace std;
+using namespace boost::program_options;
 
 //****************************************************
 // Global Variables
@@ -28,9 +30,9 @@ int Height_global = 400;
 //******
 //HARD CODED INPUTS -- PLEASE CHANGE
 //***
-float KA = 0.5;
-float KD = 0.5;
-float KS = 0.5;
+Color KA = Color(0.5, 0.5, 0.5);
+Color KD = Color(0.5, 0.5, 0.5);
+Color KS = Color(0.5, 0.5, 0.5);
 float SPU = 0.5;
 float SPV = 0.5;
 bool is_isotropic = true;
@@ -89,6 +91,11 @@ void scale_color(float c, Color c1, Color *c2) {
     c2->blue = c * c1.blue;
 }
 
+void mult_color(Color c1, Color c2, Color *c3) {
+    c3->red = c1.red * c2.red;
+    c3->green = c1.green * c2.green;
+    c3->blue = c1.blue * c2.blue;
+}
 //****************************************************
 // Keyboard inputs
 //****************************************************
@@ -205,18 +212,22 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       Vector reflect = Vector();
       reflectance(light_vec, normal, &reflect); 
       Color new_ambient = Color();
-      scale_color(KA, light_col, &new_ambient);
+      mult_color(KA, light_col, &new_ambient);
       ambient.add_color(new_ambient);
 
       Color new_diffuse = Color();
+      Color diff1 = Color();
       float l_n = dot(light_vec, normal);
       float positive_dot = max(l_n,(float)  0.0);
-      scale_color(positive_dot * KD, light_col, &new_diffuse); 
+      mult_color(KD, light_col, &diff1); 
+      scale_color(positive_dot, diff1, &new_diffuse);
       diffuse.add_color(new_diffuse);
 
       Color new_specular = Color();
-      float tmp = pow(max(dot(reflect, view),(float)  0), SPU) * KS;
-      scale_color(tmp, light_col, &new_specular);
+      Color spec1 = Color();
+      float tmp = pow(max(dot(reflect, view),(float)  0), SPU);
+      scale_color(tmp, KD, &spec1);
+      mult_color(spec1, light_col, &new_specular);
       specular.add_color(new_specular);
     }
   tmp_pixel_color.add_color(ambient); 
@@ -277,6 +288,12 @@ void size_callback(GLFWwindow* window, int width, int height)
     display(window);
 }
 
+void create_ambient_light(char* red, char* green, char* blue) {
+    float r =(float) atof(red);
+    float g =(float) atof(green);
+    float b =(float) atof(blue);
+    KA = Color(r, g, b);
+}
 
 //****************************************************
 // the usual stuff, nothing exciting here
@@ -284,7 +301,25 @@ void size_callback(GLFWwindow* window, int width, int height)
 int main(int argc, char *argv[]) {
     //This initializes glfw
     initializeRendering();
-    
+
+    int i = 0;
+    while( i + 1 != argc) {
+        printf("Here");
+        if (strcmp(argv[i], "-ka")) {
+            create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
+            i = i + 3;
+        } else if (strcmp(argv[i], "-kd")) {
+            
+        }
+           // case "-ks":  ;
+           // case "-spu": ;
+           // case "-spv": ;
+           // case "-sp": ;
+           // case "-pl": ;
+           // case "-dl": ;
+        i = i + 1;
+    }
+
     GLFWwindow* window = glfwCreateWindow( Width_global, Height_global, "CS184", NULL, NULL );
     if ( !window )
     {
