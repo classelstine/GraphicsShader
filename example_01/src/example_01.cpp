@@ -301,15 +301,17 @@ void create_ambient_light(char* red, char* green, char* blue) {
 int main(int argc, char *argv[]) {
     //This initializes glfw
     initializeRendering();
-
     int i = 0;
-    while( i + 1 != argc) {
-        printf("Here");
-        if (strcmp(argv[i], "-ka")) {
+    cout << "arg c: " << argc << endl;
+    while( i + 1 != argc ) {
+        cout << argv[i] << endl;
+        cout << "iteration: " << i << endl;
+        if (strcmp(argv[i], "-ka") == 0) {
+            cout << "in ka" << endl;
             create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
             i = i + 3;
         } else if (strcmp(argv[i], "-kd")) {
-            
+             
         }
            // case "-ks":  ;
            // case "-spu": ;
@@ -317,6 +319,7 @@ int main(int argc, char *argv[]) {
            // case "-sp": ;
            // case "-pl": ;
            // case "-dl": ;
+        cout << "1" << endl;
         i = i + 1;
     }
 
