@@ -101,10 +101,10 @@ class Vector {
 
 Vector::Vector() {} 
 
-Vector::Vector (float x, float y, float z) {
-    x = x;
-    y = y;
-    z = z;
+Vector::Vector (float v_x, float v_y, float v_z) {
+    x = v_x;
+    y = v_y;
+    z = v_z;
 }
 
 void Vector::normalize (void) { 
@@ -125,10 +125,10 @@ class Point {
   Point(float, float, float);
 };
 
-Point::Point (float x, float y, float z) {
-    x = x;
-    y = y;
-    z = z;
+Point::Point (float p_x, float p_y, float p_z) {
+    x = p_x;
+    y = p_y;
+    z = p_z;
 }
 
 //****************************************************

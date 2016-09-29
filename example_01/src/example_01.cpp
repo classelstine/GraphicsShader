@@ -38,13 +38,20 @@ float SPV = 0.5;
 bool is_isotropic = true;
 
 int num_lights = 0;
+int num_direct = 0;
+int num_point = 0;
 
 Light light1 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 Light light2 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 Light light3 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 Light light4 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 Light light5 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-vector<Light> lights = {light1,light2,light3,light4,light5};
+Light light6 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light7 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light8 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light9 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light10 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+vector<Light> lights = {light1,light2,light3,light4,light5,light6,light7,light8,light9,light10};
 
 //****************************************************
 // Simple init function
@@ -162,7 +169,11 @@ void drawCircle(float centerX, float centerY, float radius) {
                 float z = sqrt(radius*radius-dist*dist);
                 Color pixel_color = Color();
                 phong(x, y, z, &pixel_color);
-
+                /*
+                cout << "red" << pixel_color.red << endl;
+                cout << "green" << pixel_color.green << endl;
+                cout << "blue" << pixel_color.blue << endl;
+                */
                 // given x, y, z, and light_x, light_y, and light z:
                 // find abient, diffuse, and specular parts
                 // solve for normal, light, and viewing vectors
@@ -201,6 +212,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     Point cur_point = Point(px, py, pz);
     Vector normal = Vector(px, py, pz);
     normal.normalize();
+    cout << "Normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z << endl;
     Color ambient = Color(0.0, 0.0, 0.0);
     Color diffuse = Color(0.0, 0.0, 0.0);
     Color specular = Color(0.0, 0.0, 0.0);
@@ -208,21 +220,35 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     //Should combine these two for loops into helper method
 
     for(int d =0; d < num_lights; d++) {
+      //cout << "num_lights: " << d << endl;
       Light cur_light = lights[d];
+      //cout << "light point: x - " << cur_light.x << " y - " << cur_light.y << " z - " << cur_light.z << "light red: " << cur_light.color.red << "light green: " << cur_light.color.green << "light blue: " << cur_light.color.blue << endl;
       Vector light_vec = Vector();
       Color light_col = cur_light.color;
+      cout << "r: " << light_col.red << endl;
+      cout << "g: " << light_col.green << endl;
+      cout << "b: " << light_col.blue << endl;
 
       if(cur_light.is_direct()) {
         light_vec = Vector(cur_light.x, cur_light.y, cur_light.z);
+        light_vec.normalize();
       } else {
+      //cout << "in loop" << endl;
+      //cout << "light point: x - " << cur_light.x << " y - " << cur_light.y << " z - " << cur_light.z << "light red: " << cur_light.color.red << "light green: " << cur_light.color.green << "light blue: " << cur_light.color.blue << endl;
+
         Point cur_light_pt = Point(cur_light.x, cur_light.y, cur_light.z);
+        cout << "current point: x - " << px << " y - " << py << " z - " << pz << endl;
+        cout << "light point: x - " << cur_light_pt.x << " y - " << cur_light_pt.y << " z - " << cur_light_pt.z << endl;
         points_to_vector(cur_light_pt, cur_point, &light_vec);
+        light_vec.normalize();
+        cout << "current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       }
 
       Vector reflect = Vector();
       reflectance(light_vec, normal, &reflect); 
       Color new_ambient = Color();
       mult_color(KA, light_col, &new_ambient);
+      cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
       ambient.add_color(new_ambient);
 
       Color new_diffuse = Color();
@@ -231,6 +257,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       float positive_dot = max(l_n,(float)  0.0);
       mult_color(KD, light_col, &diff1); 
       scale_color(positive_dot, diff1, &new_diffuse);
+      cout << "Diffuse Parts -- l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       diffuse.add_color(new_diffuse);
 
       Color new_specular = Color();
@@ -238,7 +265,12 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       float tmp = pow(max(dot(reflect, view),(float)  0), SPU);
       scale_color(tmp, KD, &spec1);
       mult_color(spec1, light_col, &new_specular);
+      cout << "Specular Parts -- pow:" << tmp << endl;
       specular.add_color(new_specular);
+      
+      //cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
+      //cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
+      //cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
     }
 
   tmp_pixel_color.add_color(ambient); 
@@ -247,6 +279,10 @@ void phong(float px, float py, float pz, Color *pixel_color) {
   pixel_color->red = tmp_pixel_color.red;
   pixel_color->green = tmp_pixel_color.green;
   pixel_color->blue = tmp_pixel_color.blue;
+  cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
+  cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
+  cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
+  cout << "FINAL PIXEL VAL r: " << tmp_pixel_color.red << "; g: " << tmp_pixel_color.green << "; b: " << tmp_pixel_color.blue << endl;
 }
 
 void reflectance(Vector light_source, Vector normal, Vector *reflectance) { 
@@ -347,41 +383,47 @@ int main(int argc, char *argv[]) {
     //This initializes glfw
     initializeRendering();
     int i = 0;
-    cout << "arg c: " << argc << endl;
-    while( i + 1 != argc ) {
+    //cout << "arg c: " << argc << endl;
+    while( i + 1 < argc ) {
         //Maybe try make this an enum at the end 
-        cout << "1" << endl;
-        cout << argv[i] << endl;
-        cout << "iteration: " << i << endl;
+        //cout << "1" << endl;
+        //cout << "accessing new arg" << i << endl;
+        //cout << argv[i] << endl;
+        //cout << "iteration: " << i << endl;
         if (strcmp(argv[i], "-ka") == 0) {
-            cout << "in ka" << endl;
+            //cout << "in ka" << endl;
             create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
-            cout << KA.red << endl;
-            cout << KA.green << endl;
-            cout << KA.blue << endl;
+            //cout << KA.red << endl;
+            //cout << KA.green << endl;
+            //cout << KA.blue << endl;
             i = i + 3;
             continue;
         } else if (strcmp(argv[i], "-kd") == 0) {
+            //cout << "in kd" << endl;
             create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
-            cout << KD.red << endl;
-            cout << KD.green << endl;
-            cout << KD.blue << endl;
+            //cout << KD.red << endl;
+            //cout << KD.green << endl;
+            //cout << KD.blue << endl;
             i = i + 3;
         } else if (strcmp(argv[i], "-ks") == 0) {
+            //cout << "in ks" << endl;
             create_specular_light(argv[i+1], argv[i+2], argv[i+3]);
-            cout << KS.red << endl;
-            cout << KS.green << endl;
-            cout << KS.blue << endl;
+            //cout << KS.red << endl;
+            //cout << KS.green << endl;
+            //cout << KS.blue << endl;
             i = i + 3;
         } else if (strcmp(argv[i], "-spu") == 0) { 
+            //cout << "in spu" << endl;
             SPU = (float) atof(argv[i+1]);
             is_isotropic = false;
             i++;
         } else if (strcmp(argv[i], "-spv") == 0) { 
+            //cout << "in spv" << endl;
             SPV = (float) atof(argv[i+1]);
             is_isotropic = false;
             i++;
         } else if (strcmp(argv[i], "-sp") == 0) { 
+            //cout << "in sp" << endl;
             SPU = (float) atof(argv[i+1]);
             SPV = (float) atof(argv[i+1]);
             is_isotropic = true;
@@ -389,14 +431,16 @@ int main(int argc, char *argv[]) {
         }  else if (strcmp(argv[i], "-pl") == 0) { 
             create_light(argv[i+1],argv[i+2],argv[i+3],argv[i+4],argv[i+5],argv[i+6], false);
             i = i + 6;
+            num_point++;
         }  else if (strcmp(argv[i], "-dl") == 0) { 
             create_light(argv[i+1],argv[i+2],argv[i+3],argv[i+4],argv[i+5],argv[i+6], true);
             i = i + 6;
+            num_direct++;
         }
         i = i + 1;
     }
-    cout << "2" << endl;
-
+    //cout << "2" << endl;
+    cout << "light point: x - " << lights[0].x << " y - " << lights[0].y << " z - " << lights[0].z << "light red: " << lights[0].color.red << "light green: " << lights[0].color.green << "light blue: " << lights[0].color.blue << endl;
     GLFWwindow* window = glfwCreateWindow( Width_global, Height_global, "CS184", NULL, NULL );
     if ( !window )
     {
