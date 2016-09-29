@@ -37,8 +37,14 @@ float SPU = 0.5;
 float SPV = 0.5;
 bool is_isotropic = true;
 
-Light light1 = Light(false, 0.5, 0.5, 0.5, 10, 10, 10);
-vector<Light> total_lights = {light1};
+int num_lights = 0;
+
+Light light1 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light2 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light3 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light4 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+Light light5 = Light(true, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+vector<Light> lights = {light1,light2,light3,light4,light5};
 
 //****************************************************
 // Simple init function
@@ -198,10 +204,14 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     Color ambient = Color(0.0, 0.0, 0.0);
     Color diffuse = Color(0.0, 0.0, 0.0);
     Color specular = Color(0.0, 0.0, 0.0);
-    for(int d =0; d < total_lights.size(); d++) {
-      Light cur_light = total_lights[d];
+
+    //Should combine these two for loops into helper method
+
+    for(int d =0; d < num_lights; d++) {
+      Light cur_light = lights[d];
       Vector light_vec = Vector();
       Color light_col = cur_light.color;
+
       if(cur_light.is_direct()) {
         light_vec = Vector(cur_light.x, cur_light.y, cur_light.z);
       } else {
@@ -230,6 +240,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       mult_color(spec1, light_col, &new_specular);
       specular.add_color(new_specular);
     }
+
   tmp_pixel_color.add_color(ambient); 
   tmp_pixel_color.add_color(diffuse); 
   tmp_pixel_color.add_color(specular); 
@@ -295,6 +306,40 @@ void create_ambient_light(char* red, char* green, char* blue) {
     KA = Color(r, g, b);
 }
 
+void create_diffuse_light(char* red, char* green, char* blue) {
+    float r =(float) atof(red);
+    float g =(float) atof(green);
+    float b =(float) atof(blue);
+    KD = Color(r, g, b);
+}
+
+void create_specular_light(char* red, char* green, char* blue) {
+    float r =(float) atof(red);
+    float g =(float) atof(green);
+    float b =(float) atof(blue);
+    KS = Color(r, g, b);
+}
+
+void create_light(char* x1, char* y1, char* z1, char* red, char* green, char* blue, bool is_direct) {
+    int idx = num_lights;
+    float x =(float) atof(x1);
+    float y =(float) atof(y1);
+    float z =(float) atof(z1);
+    float r =(float) atof(red);
+    float g =(float) atof(green);
+    float b =(float) atof(blue);
+    lights[idx].color.red = r;
+    lights[idx].color.green = g;
+    lights[idx].color.blue = b;
+    lights[idx].x = x;
+    lights[idx].y = y;
+    lights[idx].z = z;
+    lights[idx].active = true;
+    lights[idx].direct = is_direct;
+    num_lights++;
+}
+
+
 //****************************************************
 // the usual stuff, nothing exciting here
 //****************************************************
@@ -304,24 +349,53 @@ int main(int argc, char *argv[]) {
     int i = 0;
     cout << "arg c: " << argc << endl;
     while( i + 1 != argc ) {
+        //Maybe try make this an enum at the end 
+        cout << "1" << endl;
         cout << argv[i] << endl;
         cout << "iteration: " << i << endl;
         if (strcmp(argv[i], "-ka") == 0) {
             cout << "in ka" << endl;
             create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
+            cout << KA.red << endl;
+            cout << KA.green << endl;
+            cout << KA.blue << endl;
             i = i + 3;
-        } else if (strcmp(argv[i], "-kd")) {
-             
+            continue;
+        } else if (strcmp(argv[i], "-kd") == 0) {
+            create_ambient_light(argv[i+1], argv[i+2], argv[i+3]);
+            cout << KD.red << endl;
+            cout << KD.green << endl;
+            cout << KD.blue << endl;
+            i = i + 3;
+        } else if (strcmp(argv[i], "-ks") == 0) {
+            create_specular_light(argv[i+1], argv[i+2], argv[i+3]);
+            cout << KS.red << endl;
+            cout << KS.green << endl;
+            cout << KS.blue << endl;
+            i = i + 3;
+        } else if (strcmp(argv[i], "-spu") == 0) { 
+            SPU = (float) atof(argv[i+1]);
+            is_isotropic = false;
+            i++;
+        } else if (strcmp(argv[i], "-spv") == 0) { 
+            SPV = (float) atof(argv[i+1]);
+            is_isotropic = false;
+            i++;
+        } else if (strcmp(argv[i], "-sp") == 0) { 
+            SPU = (float) atof(argv[i+1]);
+            SPV = (float) atof(argv[i+1]);
+            is_isotropic = true;
+            i++;
+        }  else if (strcmp(argv[i], "-pl") == 0) { 
+            create_light(argv[i+1],argv[i+2],argv[i+3],argv[i+4],argv[i+5],argv[i+6], false);
+            i = i + 6;
+        }  else if (strcmp(argv[i], "-dl") == 0) { 
+            create_light(argv[i+1],argv[i+2],argv[i+3],argv[i+4],argv[i+5],argv[i+6], true);
+            i = i + 6;
         }
-           // case "-ks":  ;
-           // case "-spu": ;
-           // case "-spv": ;
-           // case "-sp": ;
-           // case "-pl": ;
-           // case "-dl": ;
-        cout << "1" << endl;
         i = i + 1;
     }
+    cout << "2" << endl;
 
     GLFWwindow* window = glfwCreateWindow( Width_global, Height_global, "CS184", NULL, NULL );
     if ( !window )

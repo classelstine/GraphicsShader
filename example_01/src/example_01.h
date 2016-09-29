@@ -49,12 +49,18 @@ class Light {
     Color color;
     float x, y, z;
     bool direct;
+    bool active = false;
     bool is_direct(void);
+    bool is_active(void);
     Light(bool, float, float, float, float, float, float);
   };
 
 bool Light::is_direct(void) { 
   return direct;
+}
+
+bool Light::is_active(void) { 
+  return active;
 }
 
 Light::Light(bool is_dir, float r, float g, float b, float lx, float ly, float lz) {
