@@ -440,7 +440,10 @@ int main(int argc, char *argv[]) {
         i = i + 1;
     }
     //cout << "2" << endl;
-    //cout << "light point: x - " << lights[0].x << " y - " << lights[0].y << " z - " << lights[0].z << "light red: " << lights[0].color.red << "light green: " << lights[0].color.green << "light blue: " << lights[0].color.blue << endl;
+    cout << "ALL PARSED INFO DONE ------ " << endl;
+    for(int j = 0; j < num_lights; j++) {
+        cout << "light point: x - " << lights[j].x << " y - " << lights[j].y << " z - " << lights[j].z << "light red: " << lights[j].color.red << "light green: " << lights[j].color.green << "light blue: " << lights[j].color.blue << endl;
+    }
 
     cout << "KD r:" << KD.red << endl;
     cout << "KD g:" << KD.green << endl;
@@ -453,6 +456,10 @@ int main(int argc, char *argv[]) {
     cout << "KA r: " << KA.red << endl;
     cout << "KA g: "<< KA.green << endl;
     cout << "KA b: " << KA.blue << endl;
+
+    cout << "SPU: " << SPU << "; SPV: " << SPV << endl;
+
+    cout << " ------ " << endl;
 
     GLFWwindow* window = glfwCreateWindow( Width_global, Height_global, "CS184", NULL, NULL );
     if ( !window )
