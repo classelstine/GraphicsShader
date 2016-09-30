@@ -94,6 +94,7 @@ class Vector {
         Vector(float, float, float);
         void normalize(void);
         Vector();
+        float get_length(void);
 };
 //*****************
 //Vector Class and relevant functions
@@ -113,6 +114,10 @@ void Vector::normalize (void) {
     y = y/length;
     z = z/length; 
 } 
+
+float Vector::get_length(void) {
+    return sqrt(sqr(x) + sqr(y) + sqr(z));
+}
 
 
 //*****************
