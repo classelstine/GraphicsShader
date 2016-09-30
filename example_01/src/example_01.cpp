@@ -280,7 +280,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       Color spec1 = Color();
       float ref_view = dot(reflect, view);
       float mx = max(ref_view, (float) 0.0);
-      float power = find_specular_power();
+      float power = find_specular_power(normal, view, light_vec);
       float tmp = pow(mx, power);
       scale_color(tmp, KS, &spec1);
         /*
@@ -316,14 +316,36 @@ void phong(float px, float py, float pz, Color *pixel_color) {
 
 }
 
-float find_specular_power(void) {
+float find_specular_power(Vector normal, Vector view, Vector light_vec) {
+    float p;
     if(is_isotropic) {
-        return SPU;
+        p = SPU;
     } else {
-        float p = 0;
+        //find half angle h = norm(l + v) 
+        Vector half_angle = Vector(); 
+        add_vector(light_vec, view, &half_angle); 
+        half_angle.normalize();
 
-        return p;
-        }   
+        //find v vector = norm(y - n(n*y)) y = [0,1,0]
+        Vector parametric_v = Vector();
+        Vector y = Vector(0.0, 1.0, 0.0);
+        float tmp = -1*dot(normal, y); 
+        Vector scaled_normal = Vector(); 
+        scale_vector(tmp, normal, &scaled_normal);
+        scaled_normal.normalize();
+
+        //find u vector = norm(cross(v, n)) 
+        Vector parametric_u = Vector(); 
+        cross(parametric_v, normal, &parametric_u); 
+        parametric_u.normalize();
+
+        //find specular exponent = p_u(h*u)^2 + p_v(h*v)^2/1 - (h*n)^2
+        float tmp_hu = SPU*pow(dot(half_angle, parametric_u), 2); 
+        float tmp_hv = SPV*pow(dot(half_angle, parametric_v), 2); 
+        float denominator = 1 - pow(dot(half_angle, normal), 2);
+        p = (tmp_hu + tmp_hv)/denominator;
+    } 
+    return p;
 }
 
 void find_specular_color(Vector norm, Vector light_vec, Vector view, Color *total_specular) {
