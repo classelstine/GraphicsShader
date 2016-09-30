@@ -212,7 +212,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     Point cur_point = Point(px, py, pz);
     Vector normal = Vector(px, py, pz);
     normal.normalize();
-    /* 
+    /*
     cout << "Normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z << endl;
     */
     Color ambient = Color(0.0, 0.0, 0.0);
@@ -261,19 +261,29 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       float l_n = dot(light_vec, normal);
       //cout << "l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       float positive_dot = max(l_n,(float)  0.0);
-      mult_color(KD, light_col, &diff1); 
+      mult_color(KD, light_col, &diff1);
+      /*
+      cout << "KD * light col: " << diff1.red << "," << diff1.green << "," << diff1.blue << endl;
+      */
       scale_color(positive_dot, diff1, &new_diffuse);
       diffuse.add_color(new_diffuse);
 
       Color new_specular = Color();
       Color spec1 = Color();
       float ref_view = dot(reflect, view);
-      float tmp = pow(max(ref_view,(float)  0), SPU);
+      float mx = max(ref_view, (float) 0.0);
+      float tmp = pow(mx, SPU);
       scale_color(tmp, KS, &spec1);
-      mult_color(spec1, light_col, &new_specular);
       /*
-      cout << "Specular Parts -- pow:" << tmp << "; REFLECT:" << reflect.x << "," << reflect.y << "," << reflect.z<< " DOT: "<< ref_view << endl;
+      cout << "KS: " << KS.red << "," << KS.green << "," << KS.blue << endl;
+      cout << "max: " << mx << ", ref dot view" << ref_view << "," << spec1.blue << endl;
+      cout << "KS * power: " << spec1.red << "," << spec1.green << "," << spec1.blue << endl;
       */
+      mult_color(spec1, light_col, &new_specular);
+      /* 
+      cout << "(KS * power) * light color: " << new_specular.red << "," << new_specular.green << "," << new_specular.blue << endl;
+      cout << "Specular Parts -- pow:" << tmp << "; REFLECT:" << reflect.x << "," << reflect.y << "," << reflect.z<< " DOT: "<< ref_view << endl;
+       */ 
       specular.add_color(new_specular);
       /* 
       cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
@@ -288,12 +298,12 @@ void phong(float px, float py, float pz, Color *pixel_color) {
   pixel_color->red = tmp_pixel_color.red;
   pixel_color->green = tmp_pixel_color.green;
   pixel_color->blue = tmp_pixel_color.blue;
-  /*
+/*
   cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
   cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
   cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
   cout << "FINAL PIXEL VAL r: " << tmp_pixel_color.red << "; g: " << tmp_pixel_color.green << "; b: " << tmp_pixel_color.blue << endl;
-  */
+*/
 
 }
 
@@ -302,7 +312,7 @@ void reflectance(Vector light_source, Vector normal, Vector *reflectance) {
     scale_vector(-1, light_source, &negative_norm); 
     float tmp = 2.0*dot(light_source, normal); 
     Vector scaled_norm = Vector();
-    scale_vector(tmp, light_source, &scaled_norm); 
+    scale_vector(tmp, normal, &scaled_norm); 
     add_vector(negative_norm, scaled_norm, reflectance);
 } 
 
