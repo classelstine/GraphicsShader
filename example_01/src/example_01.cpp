@@ -322,20 +322,21 @@ float find_specular_power(Vector normal, Vector view, Vector light_vec) {
         p = SPU;
     } else {
         //find half angle h = norm(l + v) 
-        Vector half_angle = Vector(); 
+        Vector half_angle = Vector(0.0, 0.0, 0.0); 
         add_vector(light_vec, view, &half_angle); 
         half_angle.normalize();
 
         //find v vector = norm(y - n(n*y)) y = [0,1,0]
-        Vector parametric_v = Vector();
+        Vector parametric_v = Vector(0.0, 0.0, 0.0);
         Vector y = Vector(0.0, 1.0, 0.0);
         float tmp = -1*dot(normal, y); 
-        Vector scaled_normal = Vector(); 
+        Vector scaled_normal = Vector(0.0, 0.0, 0.0); 
         scale_vector(tmp, normal, &scaled_normal);
-        scaled_normal.normalize();
+        add_vector(y, scaled_normal, &parametric_v);
+        parametric_v.normalize();
 
         //find u vector = norm(cross(v, n)) 
-        Vector parametric_u = Vector(); 
+        Vector parametric_u = Vector(0.0, 0.0, 0.0); 
         cross(parametric_v, normal, &parametric_u); 
         parametric_u.normalize();
 
