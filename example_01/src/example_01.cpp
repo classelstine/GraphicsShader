@@ -212,9 +212,9 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     Point cur_point = Point(px, py, pz);
     Vector normal = Vector(px, py, pz);
     normal.normalize();
-    
+    /* 
     cout << "Normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z << endl;
-    
+    */
     Color ambient = Color(0.0, 0.0, 0.0);
     Color diffuse = Color(0.0, 0.0, 0.0);
     Color specular = Color(0.0, 0.0, 0.0);
@@ -253,13 +253,13 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       reflect.normalize();
       Color new_ambient = Color();
       mult_color(KA, light_col, &new_ambient);
-      cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
+      //cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
       ambient.add_color(new_ambient);
 
       Color new_diffuse = Color();
       Color diff1 = Color();
       float l_n = dot(light_vec, normal);
-      cout << "l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
+      //cout << "l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       float positive_dot = max(l_n,(float)  0.0);
       mult_color(KD, light_col, &diff1); 
       scale_color(positive_dot, diff1, &new_diffuse);
@@ -271,9 +271,9 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       float tmp = pow(max(ref_view,(float)  0), SPU);
       scale_color(tmp, KS, &spec1);
       mult_color(spec1, light_col, &new_specular);
-      
+      /*
       cout << "Specular Parts -- pow:" << tmp << "; REFLECT:" << reflect.x << "," << reflect.y << "," << reflect.z<< " DOT: "<< ref_view << endl;
-      
+      */
       specular.add_color(new_specular);
       /* 
       cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
@@ -288,12 +288,12 @@ void phong(float px, float py, float pz, Color *pixel_color) {
   pixel_color->red = tmp_pixel_color.red;
   pixel_color->green = tmp_pixel_color.green;
   pixel_color->blue = tmp_pixel_color.blue;
-
+  /*
   cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
   cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
   cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
   cout << "FINAL PIXEL VAL r: " << tmp_pixel_color.red << "; g: " << tmp_pixel_color.green << "; b: " << tmp_pixel_color.blue << endl;
-
+  */
 
 }
 
