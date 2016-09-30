@@ -431,9 +431,11 @@ void create_specular_light(char* red, char* green, char* blue) {
 
 void create_light(char* x1, char* y1, char* z1, char* red, char* green, char* blue, bool is_direct) {
     int idx = num_lights;
-    float x =(float) atof(x1);
-    float y =(float) atof(y1);
-    float z =(float) atof(z1);
+    float radius = min(Width_global, Height_global) * 0.8;
+    cout << "RADIUS" << radius << endl;
+    float x =(float) atof(x1) * radius;
+    float y =(float) atof(y1) * radius;
+    float z =(float) atof(z1) * radius;
     float r =(float) atof(red);
     float g =(float) atof(green);
     float b =(float) atof(blue);
