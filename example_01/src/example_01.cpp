@@ -33,8 +33,8 @@ int Height_global = 400;
 Color KA = Color(0.0, 0.0, 0.0);
 Color KD = Color(0.0, 0.0, 0.0);
 Color KS = Color(0.0, 0.0, 0.0);
-float SPU = 0.5;
-float SPV = 0.5;
+float SPU = 1;
+float SPV = 1;
 bool is_isotropic = true;
 
 int num_lights = 0;
