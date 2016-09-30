@@ -164,6 +164,10 @@ void drawCircle(float centerX, float centerY, float radius);
 //*****
 void phong(float px, float py, float pz, Color *pixel_color);
 
+
+float find_specular_power(void);
+
+
 void reflectance(Vector light_source, Vector normal, Vector *reflectance);
 
 //****************************************************

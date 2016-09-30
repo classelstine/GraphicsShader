@@ -108,7 +108,14 @@ void mult_color(Color c1, Color c2, Color *c3) {
     c3->red = c1.red * c2.red;
     c3->green = c1.green * c2.green;
     c3->blue = c1.blue * c2.blue;
+} 
+
+void cross(Vector v1, Vector v2, Vector *v3)  {
+    v3->x = v1.y * v2.z - v1.z * v2.y;
+    v3->y = v1.z * v2.x - v1.x * v2.z;
+    v3->z = v1.x * v2.y - v1.y * v2.x;
 }
+
 //****************************************************
 // Keyboard inputs
 //****************************************************
@@ -267,18 +274,20 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       */
       scale_color(positive_dot, diff1, &new_diffuse);
       diffuse.add_color(new_diffuse);
-
+      
+      
       Color new_specular = Color();
       Color spec1 = Color();
       float ref_view = dot(reflect, view);
       float mx = max(ref_view, (float) 0.0);
-      float tmp = pow(mx, SPU);
+      float power = find_specular_power();
+      float tmp = pow(mx, power);
       scale_color(tmp, KS, &spec1);
-      /*
-      cout << "KS: " << KS.red << "," << KS.green << "," << KS.blue << endl;
-      cout << "max: " << mx << ", ref dot view" << ref_view << "," << spec1.blue << endl;
-      cout << "KS * power: " << spec1.red << "," << spec1.green << "," << spec1.blue << endl;
-      */
+        /*
+        cout << "KS: " << KS.red << "," << KS.green << "," << KS.blue << endl;
+        cout << "max: " << mx << ", ref dot view" << ref_view << "," << spec1.blue << endl;
+        cout << "KS * power: " << spec1.red << "," << spec1.green << "," << spec1.blue << endl;
+        */
       mult_color(spec1, light_col, &new_specular);
       /* 
       cout << "(KS * power) * light color: " << new_specular.red << "," << new_specular.green << "," << new_specular.blue << endl;
@@ -305,6 +314,26 @@ void phong(float px, float py, float pz, Color *pixel_color) {
   cout << "FINAL PIXEL VAL r: " << tmp_pixel_color.red << "; g: " << tmp_pixel_color.green << "; b: " << tmp_pixel_color.blue << endl;
 */
 
+}
+
+float find_specular_power(void) {
+    if(is_isotropic) {
+        return SPU;
+    } else {
+        float p = 0;
+
+        return p;
+        }   
+}
+
+void find_specular_color(Vector norm, Vector light_vec, Vector view, Color *total_specular) {
+    float new_red = 0.0;
+    float new_green = 0.0;
+    float new_blue = 0.0;
+
+    total_specular->red = new_red;
+    total_specular->green = new_green;
+    total_specular->blue = new_blue;
 }
 
 void reflectance(Vector light_source, Vector normal, Vector *reflectance) { 
