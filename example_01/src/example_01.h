@@ -163,6 +163,7 @@ void drawCircle(float centerX, float centerY, float radius);
 // view : view vector
 //*****
 void phong(float px, float py, float pz, Color *pixel_color);
+void ashikhim_shirley(float px, float py, float pz, Color *pixel_color);
 
 
 float find_specular_power(Vector normal, Vector view, Vector light_vec);

@@ -36,6 +36,7 @@ Color KS = Color(0.0, 0.0, 0.0);
 float SPU = 1;
 float SPV = 1;
 bool is_isotropic = true;
+bool ashikhmin_shirley = false;
 
 int num_lights = 0;
 int num_direct = 0;
@@ -175,7 +176,11 @@ void drawCircle(float centerX, float centerY, float radius) {
                 // This is the front-facing Z coordinate
                 float z = sqrt(radius*radius-dist*dist);
                 Color pixel_color = Color();
-                phong(x, y, z, &pixel_color);
+                if (ashikhmin_shirley) { 
+                  ashikhim_shirley(x, y, z, &pixel_color);
+                } else { 
+                  phong(x, y, z, &pixel_color);
+                } 
                 /*
                 cout << "red" << pixel_color.red << endl;
                 cout << "green" << pixel_color.green << endl;
@@ -202,6 +207,101 @@ void drawCircle(float centerX, float centerY, float radius) {
     }
 
     glEnd();
+}
+
+void fresnal(Vector half_angle, Vector view, Color *specular) { 
+    Color ones = Color(1.0, 1.0, 1.0);
+    Color negative_KS = Color();
+    scale_color(-1.0, KS, &negative_KS);
+    ones.add_color(negative_KS);
+    float hv = 1.0 - dot(half_angle, view);
+    float hv_coeff = pow(hv, 5); 
+    Color tmp = Color();
+    scale_color(hv_coeff, ones, &tmp);
+    tmp.add_color(KS);
+    specular->red = tmp.red; 
+    specular->green = tmp.green;
+    specular->blue = tmp.blue;
+}
+
+//*****
+//ASHIKHIM SHIRLEY SHADING APPLIED
+// px, py, pz : location of the pixel
+// normal : norm vector
+// view : view vector
+// half_angle : normalized half vector between view and normal 
+// parametric_u parametric_v : tangent vectors that form an orthonormal basis along with n 
+// F(cos(theta)) : Fresnal reflectance for incident angle theta 
+// light_vecs : list of light vectors normalized
+// light_cols : list of light colors 
+//*****
+
+
+void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
+    Color tmp_pixel_color = Color(0.0, 0.0, 0.0);
+    Vector view = Vector(0,0,1);
+    Point cur_point = Point(px, py, pz);
+    Vector normal = Vector(px, py, pz);
+    normal.normalize();
+
+    Color diffuse = Color(0.0, 0.0, 0.0);
+    Color specular = Color(0.0, 0.0, 0.0);
+
+    for(int d =0; d < num_lights; d++) {
+      Light cur_light = lights[d];
+      Vector light_vec = Vector();
+      Color light_col = cur_light.color;
+
+      if(cur_light.is_direct()) {
+        light_vec = Vector(-1 * cur_light.x, -1 * cur_light.y, -1 * cur_light.z);
+        light_vec.normalize();
+      } else {
+        Point cur_light_pt = Point(cur_light.x, cur_light.y, cur_light.z);
+        points_to_vector(cur_light_pt, cur_point, &light_vec);
+        light_vec.normalize();
+      }
+
+      Vector half_angle = Vector(0.0, 0.0, 0.0); 
+      add_vector(light_vec, view, &half_angle); 
+      half_angle.normalize();
+
+      //Calculate specular
+      Color new_specular = Color();
+      float p = find_specular_power(normal, view, light_vec);
+      //numerator = sqrt((p_u+1)(p_v+1))*dot(n, half_angle)^specpower
+      float numerator = sqrt((SPU + 1) * (SPV + 1)) * pow (dot(normal, half_angle), 2);
+      //denominator = 8*pi*dot(h, view)*max(dot(n, view), dot(n, light) 
+      float tmp_he = dot(half_angle, view); 
+      float tmp_ne = dot(normal, view); 
+      float tmp_nl = dot(normal, light_vec); 
+      float mx = max(tmp_ne, tmp_nl);
+      float denominator = 8*PI*tmp_he*mx;
+      float new_specular_coeff = numerator/denominator; 
+      Color tmp = Color();
+      fresnal(half_angle, view, &tmp);
+      scale_color(new_specular_coeff, tmp, &new_specular);
+      specular.add_color(new_specular);
+      
+      //Calculate diffuse 
+      Color new_diffuse = Color();
+      float half_nv = 1 - dot(normal, view)/2; 
+      float half_nl = 1 - dot(normal, light_vec)/2; 
+      float diffuse_coeff = (1 - pow(half_nv, 5))*(1 - pow(half_nl, 5));
+      diffuse_coeff = (28/(23*PI))*diffuse_coeff;
+      Color diff1 = Color();
+      Color ones = Color(1.0, 1.0, 1.0);
+      Color negative_KS = Color();
+      scale_color(-1.0, KS, &negative_KS);
+      negative_KS.add_color(ones);
+      mult_color(negative_KS, KD, &diff1);
+      scale_color(diffuse_coeff, diff1, &new_diffuse);
+      diffuse.add_color(new_diffuse);
+    }
+  tmp_pixel_color.add_color(diffuse); 
+  tmp_pixel_color.add_color(specular); 
+  pixel_color->red = tmp_pixel_color.red;
+  pixel_color->green = tmp_pixel_color.green;
+  pixel_color->blue = tmp_pixel_color.blue;
 }
 
 
@@ -508,6 +608,9 @@ int main(int argc, char *argv[]) {
             create_light(argv[i+1],argv[i+2],argv[i+3],argv[i+4],argv[i+5],argv[i+6], true);
             i = i + 6;
             num_direct++;
+        } else if (strcmp(argv[i], "-asm") == 0) { 
+            cout << "here" << endl;
+            ashikhmin_shirley = true; 
         }
         i = i + 1;
     }
