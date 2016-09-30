@@ -88,7 +88,7 @@ void scale_vector(float c, Vector v, Vector *n) {
 }
 
 float dot(Vector v1, Vector v2) {
-   return (v1.x * v2.x) + (v1.y * v1.y) + (v1.z * v1.z);
+   return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
 }
 
 void add_vector(Vector v1, Vector v2, Vector *v) {
@@ -212,7 +212,9 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     Point cur_point = Point(px, py, pz);
     Vector normal = Vector(px, py, pz);
     normal.normalize();
+    
     cout << "Normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z << endl;
+    
     Color ambient = Color(0.0, 0.0, 0.0);
     Color diffuse = Color(0.0, 0.0, 0.0);
     Color specular = Color(0.0, 0.0, 0.0);
@@ -222,7 +224,9 @@ void phong(float px, float py, float pz, Color *pixel_color) {
     for(int d =0; d < num_lights; d++) {
       //cout << "num_lights: " << d << endl;
       Light cur_light = lights[d];
+
       //cout << "light point: x - " << cur_light.x << " y - " << cur_light.y << " z - " << cur_light.z << "light red: " << cur_light.color.red << "light green: " << cur_light.color.green << "light blue: " << cur_light.color.blue << endl;
+
       Vector light_vec = Vector();
       Color light_col = cur_light.color;
       //cout << "r: " << light_col.red << endl;
@@ -230,7 +234,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
       //cout << "b: " << light_col.blue << endl;
 
       if(cur_light.is_direct()) {
-        light_vec = Vector(cur_light.x, cur_light.y, cur_light.z);
+        light_vec = Vector(-1 * cur_light.x, -1 * cur_light.y, -1 * cur_light.z);
         light_vec.normalize();
       } else {
       //cout << "in loop" << endl;
@@ -241,33 +245,35 @@ void phong(float px, float py, float pz, Color *pixel_color) {
         //cout << "light point: x - " << cur_light_pt.x << " y - " << cur_light_pt.y << " z - " << cur_light_pt.z << endl;
         points_to_vector(cur_light_pt, cur_point, &light_vec);
         light_vec.normalize();
-        cout << "current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
+        //cout << "current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       }
 
       Vector reflect = Vector();
-      cout << "CREATING REFLECT: " << endl;
-      reflectance(light_vec, normal, &reflect); 
+      reflectance(light_vec, normal, &reflect);
+      reflect.normalize();
       Color new_ambient = Color();
       mult_color(KA, light_col, &new_ambient);
-      //cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
+      cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
       ambient.add_color(new_ambient);
 
       Color new_diffuse = Color();
       Color diff1 = Color();
       float l_n = dot(light_vec, normal);
+      cout << "l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       float positive_dot = max(l_n,(float)  0.0);
       mult_color(KD, light_col, &diff1); 
       scale_color(positive_dot, diff1, &new_diffuse);
-      //cout << "Diffuse Parts -- l dot n: " << l_n << ", normal Vector: " << normal.x << ", " << normal.y << ", " << normal.z <<", current light vector: x - " << light_vec.x << " y: " << light_vec.y << " z: " << light_vec.z << endl;
       diffuse.add_color(new_diffuse);
 
       Color new_specular = Color();
       Color spec1 = Color();
       float ref_view = dot(reflect, view);
       float tmp = pow(max(ref_view,(float)  0), SPU);
-      scale_color(tmp, KD, &spec1);
+      scale_color(tmp, KS, &spec1);
       mult_color(spec1, light_col, &new_specular);
+      
       cout << "Specular Parts -- pow:" << tmp << "; REFLECT:" << reflect.x << "," << reflect.y << "," << reflect.z<< " DOT: "<< ref_view << endl;
+      
       specular.add_color(new_specular);
       /* 
       cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
@@ -287,6 +293,7 @@ void phong(float px, float py, float pz, Color *pixel_color) {
   cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
   cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
   cout << "FINAL PIXEL VAL r: " << tmp_pixel_color.red << "; g: " << tmp_pixel_color.green << "; b: " << tmp_pixel_color.blue << endl;
+
 
 }
 
