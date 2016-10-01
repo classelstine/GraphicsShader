@@ -213,11 +213,11 @@ void fresnal(Vector half_angle, Vector view, Color *specular) {
     Color ones = Color(1.0, 1.0, 1.0);
     Color negative_KS = Color();
     scale_color(-1.0, KS, &negative_KS);
-    ones.add_color(negative_KS);
+    negative_KS.add_color(ones);
     float hv = 1.0 - dot(half_angle, view);
     float hv_coeff = pow(hv, 5); 
     Color tmp = Color();
-    scale_color(hv_coeff, ones, &tmp);
+    scale_color(hv_coeff, negative_KS, &tmp);
     tmp.add_color(KS);
     specular->red = tmp.red; 
     specular->green = tmp.green;
@@ -246,6 +246,7 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
 
     Color diffuse = Color(0.0, 0.0, 0.0);
     Color specular = Color(0.0, 0.0, 0.0);
+    Color ambient = Color(0.0, 0.0, 0.0);
 
     for(int d =0; d < num_lights; d++) {
       Light cur_light = lights[d];
@@ -265,17 +266,28 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
       add_vector(light_vec, view, &half_angle); 
       half_angle.normalize();
 
+      //Hypothetical Ambient 
+      Color ambient = Color(0.0, 0.0, 0.0);
+      Vector reflect = Vector();
+      reflectance(light_vec, normal, &reflect);
+      reflect.normalize();
+      Color new_ambient = Color();
+      mult_color(KA, light_col, &new_ambient);
+      //cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
+      ambient.add_color(new_ambient);
+
       //Calculate specular
       Color new_specular = Color();
       float p = find_specular_power(normal, view, light_vec);
       //numerator = sqrt((p_u+1)(p_v+1))*dot(n, half_angle)^specpower
-      float numerator = sqrt((SPU + 1) * (SPV + 1)) * pow (dot(normal, half_angle), 2);
+      float numerator = sqrt((SPU + 1) * (SPV + 1)) * pow (dot(normal, half_angle), p);
       //denominator = 8*pi*dot(h, view)*max(dot(n, view), dot(n, light) 
       float tmp_he = dot(half_angle, view); 
       float tmp_ne = dot(normal, view); 
       float tmp_nl = dot(normal, light_vec); 
       float mx = max(tmp_ne, tmp_nl);
       float denominator = 8*PI*tmp_he*mx;
+      //float denominator = 8*PI*tmp_he*max(dot(normal, view), dot(normal, light_vec));
       float new_specular_coeff = numerator/denominator; 
       Color tmp = Color();
       fresnal(half_angle, view, &tmp);
@@ -296,12 +308,22 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
       mult_color(negative_KS, KD, &diff1);
       scale_color(diffuse_coeff, diff1, &new_diffuse);
       diffuse.add_color(new_diffuse);
+      cout << "Diffuse: half_nl, " << half_nl<< "half_nv "<< half_nv << "diffuse coeff:" << diffuse_coeff << endl;
+      cout << "KS: " << KS.red << "Negative KS: " << negative_KS.red << ". KD: " << KD.red << endl;
+      cout << "NEW DIFFUSE: " << new_diffuse.red << endl;
     }
   tmp_pixel_color.add_color(diffuse); 
   tmp_pixel_color.add_color(specular); 
+  tmp_pixel_color.add_color(ambient); 
   pixel_color->red = tmp_pixel_color.red;
   pixel_color->green = tmp_pixel_color.green;
   pixel_color->blue = tmp_pixel_color.blue;
+
+       
+      cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
+      cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
+      cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
+      
 }
 
 
@@ -559,7 +581,7 @@ int main(int argc, char *argv[]) {
     initializeRendering();
     int i = 0;
     //cout << "arg c: " << argc << endl;
-    while( i + 1 < argc ) {
+    while( i + 1 <= argc ) {
         //Maybe try make this an enum at the end 
         //cout << "1" << endl;
         //cout << "accessing new arg" << i << endl;

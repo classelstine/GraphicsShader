@@ -1,5 +1,7 @@
 # CS 184 Fall 2016
 Instructor: James O'Brien
+Claire Asselstine. SID: 23628013. Accnt: cs-184-aay
+James Musk. SID: 23851414. Accnt: cs184-adm
 
 # USAGE
 1. ‘cd’ into your assignment directory, type into the Terminal the following step by step
