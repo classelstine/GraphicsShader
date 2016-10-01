@@ -10,7 +10,6 @@
 #include <math.h>
 #include "example_01.h"
 
-#include <boost/program_options.hpp>
 
 
 #define PI 3.14159265 // Should be used from mathlib
