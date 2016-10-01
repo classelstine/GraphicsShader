@@ -222,6 +222,7 @@ void fresnal(Vector half_angle, Vector view, Color *specular) {
     specular->red = tmp.red; 
     specular->green = tmp.green;
     specular->blue = tmp.blue;
+    //cout << "FRESNAL : " << specular->red << "," << specular->green << "," << specular->blue << " half angle :" << half_angle.x << "," << half_angle.y << "," << half_angle.z << endl;
 }
 
 //*****
@@ -267,6 +268,7 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
       half_angle.normalize();
 
       //Hypothetical Ambient 
+      /*
       Color ambient = Color(0.0, 0.0, 0.0);
       Vector reflect = Vector();
       reflectance(light_vec, normal, &reflect);
@@ -275,9 +277,10 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
       mult_color(KA, light_col, &new_ambient);
       //cout << "Ambient Parts -- KA: " << KA.red << ", " << KA.green << ", " << KA.blue << endl;
       ambient.add_color(new_ambient);
+      */
 
       //Calculate specular
-      Color new_specular = Color();
+      Color new_specular = Color(0.0, 0.0, 0.0);
       float p = find_specular_power(normal, view, light_vec);
       //numerator = sqrt((p_u+1)(p_v+1))*dot(n, half_angle)^specpower
       float numerator = sqrt((SPU + 1) * (SPV + 1)) * pow (dot(normal, half_angle), p);
@@ -308,21 +311,29 @@ void ashikhim_shirley(float px, float py, float pz, Color *pixel_color) {
       mult_color(negative_KS, KD, &diff1);
       scale_color(diffuse_coeff, diff1, &new_diffuse);
       diffuse.add_color(new_diffuse);
-      cout << "Diffuse: half_nl, " << half_nl<< "half_nv "<< half_nv << "diffuse coeff:" << diffuse_coeff << endl;
-      cout << "KS: " << KS.red << "Negative KS: " << negative_KS.red << ". KD: " << KD.red << endl;
+      /*
+      cout << "NORMAL: " << normal.x << "," << normal.y << "," << normal.z << endl;
+      cout << "LIGHT VEC " << light_vec.x << "," << light_vec.y << "," << light_vec.z << endl;
+    
+      cout << "Diffuse: half_nl, "  << half_nl<< ", half_nv "<< half_nv << ", diffuse coeff:" << diffuse_coeff << endl;
+      cout << "KS: " << KS.red << "," << KS.green << "," << KS.blue <<  ", Negative KS: " << negative_KS.red << ","<< negative_KS.green << "," << negative_KS.blue << "  KD: " << KD.red << ","<< KD.green << KD.blue << endl;
       cout << "NEW DIFFUSE: " << new_diffuse.red << endl;
+      */
     }
   tmp_pixel_color.add_color(diffuse); 
   tmp_pixel_color.add_color(specular); 
+  /*
   tmp_pixel_color.add_color(ambient); 
+  */
   pixel_color->red = tmp_pixel_color.red;
   pixel_color->green = tmp_pixel_color.green;
   pixel_color->blue = tmp_pixel_color.blue;
 
-       
+       /*
       cout << "spec VAL r: " << specular.red << "; g: " << specular.green << "; b: " << specular.blue << endl;
       cout << "diffuse VAL r: " << diffuse.red << "; g: " << diffuse.green << "; b: " << diffuse.blue << endl;
       cout << "ambient VAL r: " << ambient.red << "; g: " << ambient.green << "; b: " << ambient.blue << endl;
+      */
       
 }
 
@@ -554,7 +565,9 @@ void create_specular_light(char* red, char* green, char* blue) {
 void create_light(char* x1, char* y1, char* z1, char* red, char* green, char* blue, bool is_direct) {
     int idx = num_lights;
     float radius = min(Width_global, Height_global) * 0.8;
+    /*
     cout << "RADIUS" << radius << endl;
+    */
     float x =(float) atof(x1) * radius;
     float y =(float) atof(y1) * radius;
     float z =(float) atof(z1) * radius;
@@ -631,12 +644,15 @@ int main(int argc, char *argv[]) {
             i = i + 6;
             num_direct++;
         } else if (strcmp(argv[i], "-asm") == 0) { 
+            /*
             cout << "here" << endl;
+            */
             ashikhmin_shirley = true; 
         }
         i = i + 1;
     }
     //cout << "2" << endl;
+    /*
     cout << "ALL PARSED INFO DONE ------ " << endl;
     for(int j = 0; j < num_lights; j++) {
         cout << "light point: x - " << lights[j].x << " y - " << lights[j].y << " z - " << lights[j].z << "light red: " << lights[j].color.red << "light green: " << lights[j].color.green << "light blue: " << lights[j].color.blue << endl;
@@ -657,7 +673,7 @@ int main(int argc, char *argv[]) {
     cout << "SPU: " << SPU << "; SPV: " << SPV << endl;
 
     cout << " ------ " << endl;
-
+    */
     GLFWwindow* window = glfwCreateWindow( Width_global, Height_global, "CS184", NULL, NULL );
     if ( !window )
     {
