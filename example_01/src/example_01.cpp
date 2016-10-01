@@ -15,7 +15,6 @@
 #define PI 3.14159265 // Should be used from mathlib
 
 using namespace std;
-using namespace boost::program_options;
 
 //****************************************************
 // Global Variables
